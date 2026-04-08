@@ -11,7 +11,7 @@ from rich.console import Console
 console = Console()
 
 
-def extract_text_from_pdf(pdf_buffer, max_pages: int = 5) -> str:
+def extract_text_from_pdf(pdf_buffer, max_pages: int = 3) -> str:
     """Extract text from a PDF file buffer (UploadedFile from Streamlit)."""
     from pypdf import PdfReader
 

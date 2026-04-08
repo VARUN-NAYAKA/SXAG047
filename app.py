@@ -49,14 +49,17 @@ st.set_page_config(
 # ──────────────────────────────────────────────
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
     .stApp {
-        background: linear-gradient(135deg, #0f0c29, #1a1a2e, #16213e);
+        background: linear-gradient(135deg, #f8f9fc, #eef1f8, #e8ecf4);
+        font-family: 'Inter', sans-serif;
     }
 
     .hero-title {
         font-size: 3.5rem;
         font-weight: 800;
-        background: linear-gradient(135deg, #e94560, #533483, #0f3460);
+        background: linear-gradient(135deg, #6C63FF, #e94560, #FF6B6B);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         text-align: center;
@@ -65,109 +68,102 @@ st.markdown("""
     }
 
     .hero-subtitle {
-        font-size: 1.2rem;
-        color: #8892b0;
+        font-size: 1.15rem;
+        color: #5a6785;
         text-align: center;
         margin-top: 0.5rem;
         margin-bottom: 2rem;
     }
 
     .metric-card {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
         border-radius: 16px;
         padding: 1.5rem;
-        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         text-align: center;
-        transition: transform 0.2s;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
 
     .metric-card:hover {
-        transform: translateY(-2px);
-        border-color: #e94560;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(108, 99, 255, 0.15);
+        border-color: #6C63FF;
     }
 
     .metric-value {
         font-size: 2.5rem;
         font-weight: 700;
-        color: #e94560;
+        color: #6C63FF;
     }
 
     .metric-label {
         font-size: 0.9rem;
-        color: #8892b0;
+        color: #64748b;
         margin-top: 0.5rem;
-    }
-
-    .status-dot {
-        width: 8px;
-        height: 8px;
-        background: #2ecc71;
-        border-radius: 50%;
-        animation: pulse 1.5s infinite;
-        display: inline-block;
-    }
-
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.3; }
-    }
-
-    .log-entry {
-        padding: 8px 12px;
-        margin: 4px 0;
-        background: rgba(255, 255, 255, 0.03);
-        border-left: 3px solid #533483;
-        border-radius: 0 8px 8px 0;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.85rem;
-        color: #ccd6f6;
+        font-weight: 500;
     }
 
     .section-header {
         font-size: 1.5rem;
         font-weight: 700;
-        color: #ccd6f6;
-        border-bottom: 2px solid #e94560;
+        color: #1e293b;
+        border-bottom: 3px solid #6C63FF;
         padding-bottom: 0.5rem;
         margin: 2rem 0 1rem;
     }
 
     .gap-card {
-        background: rgba(233, 69, 96, 0.08);
-        border: 1px solid rgba(233, 69, 96, 0.2);
+        background: #fff5f5;
+        border: 1px solid #fed7d7;
+        border-left: 4px solid #e94560;
         border-radius: 12px;
-        padding: 1rem;
-        margin: 0.5rem 0;
+        padding: 1.2rem;
+        margin: 0.8rem 0;
+        color: #1e293b;
     }
 
     .rec-card {
-        background: rgba(46, 204, 113, 0.08);
-        border: 1px solid rgba(46, 204, 113, 0.25);
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #6C63FF;
         border-radius: 16px;
         padding: 1.5rem;
         margin: 0.8rem 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
 
     .confidence-bar {
         height: 8px;
         border-radius: 4px;
-        background: rgba(255,255,255,0.1);
-        margin-top: 8px;
+        background: #e2e8f0;
+        margin-top: 10px;
     }
 
     .confidence-fill {
         height: 100%;
         border-radius: 4px;
-        background: linear-gradient(90deg, #e94560, #2ecc71);
+        background: linear-gradient(90deg, #6C63FF, #2ecc71);
     }
 
     .history-item {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
         border-radius: 8px;
         padding: 0.8rem;
         margin: 0.3rem 0;
+        color: #334155;
+    }
+
+    .log-entry {
+        padding: 8px 12px;
+        margin: 4px 0;
+        background: #f1f5f9;
+        border-left: 3px solid #6C63FF;
+        border-radius: 0 8px 8px 0;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85rem;
+        color: #334155;
     }
 
     #MainMenu {visibility: hidden;}
@@ -562,28 +558,45 @@ if st.session_state.result:
         # ────── Tab 4: Research Gaps ──────
         with tab_gaps:
             st.markdown('<div class="section-header">🔍 Research Gaps & Future Directions</div>', unsafe_allow_html=True)
+            st.markdown("*Algorithmically detected gaps in the research landscape — areas where more work is needed.*")
 
             if analysis and analysis.gaps:
                 for i, gap in enumerate(analysis.gaps, 1):
+                    confidence_color = "#e94560" if gap.confidence > 0.7 else "#f59e0b" if gap.confidence > 0.5 else "#6C63FF"
                     st.markdown(f"""
                     <div class="gap-card">
-                        <strong>Gap {i}:</strong> {gap.description}<br/>
-                        <small>Confidence: {gap.confidence:.0%} | 
-                        Related: {', '.join(gap.related_topics[:3])}</small>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <div>
+                                <strong style="color:#1e293b; font-size:1.1rem;">Gap {i}</strong>
+                                <span style="background:{confidence_color}; color:white; padding:2px 10px; border-radius:12px; font-size:0.75rem; margin-left:8px;">
+                                    {gap.confidence:.0%} confidence
+                                </span>
+                            </div>
+                        </div>
+                        <p style="color:#334155; margin:0.8rem 0; font-size:0.95rem; line-height:1.6;">
+                            {gap.description}
+                        </p>
+                        <div style="margin-top:0.5rem;">
+                            <strong style="color:#64748b; font-size:0.85rem;">Related Topics:</strong>
+                            <span style="color:#6C63FF; font-size:0.85rem;">{', '.join(gap.related_topics[:4])}</span>
+                        </div>
                     </div>
                     """, unsafe_allow_html=True)
 
                     if gap.suggested_directions:
-                        with st.expander("Suggested Research Directions"):
+                        with st.expander(f"💡 Suggested Research Directions for Gap {i}"):
                             for d in gap.suggested_directions:
-                                st.markdown(f"- {d}")
+                                st.markdown(f"→ {d}")
             else:
                 st.info("No research gaps identified in this analysis.")
 
         # ────── Tab 5: Top 3 Recommended Papers ──────
         with tab_recs:
             st.markdown('<div class="section-header">🏆 ScholAR\'s Top Picks</div>', unsafe_allow_html=True)
-            st.markdown("*Based on relevance, citations, and graph centrality.*")
+            st.markdown(
+                "*These papers are ranked using a composite score of **relevance** (topic match), "
+                "**citations** (community impact), and **PageRank centrality** (structural importance in the knowledge graph).*"
+            )
 
             if report.top_recommendations:
                 for i, rec in enumerate(report.top_recommendations, 1):
@@ -593,11 +606,11 @@ if st.session_state.result:
                     st.markdown(f"""
                     <div class="rec-card">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:1.8rem;">{medal}</span>
-                            <span style="color:#2ecc71; font-size:1.5rem; font-weight:bold;">{rec.confidence:.0f}%</span>
+                            <span style="font-size:2rem;">{medal}</span>
+                            <span style="color:#6C63FF; font-size:1.6rem; font-weight:bold;">{rec.confidence:.0f}%</span>
                         </div>
-                        <h3 style="color:#ccd6f6; margin:0.5rem 0;">{paper.title}</h3>
-                        <p style="color:#8892b0;">
+                        <h3 style="color:#1e293b; margin:0.5rem 0; font-size:1.15rem;">{paper.title}</h3>
+                        <p style="color:#64748b; font-size:0.9rem;">
                             {', '.join(a.name for a in paper.authors[:3])} 
                             {'et al.' if len(paper.authors) > 3 else ''} 
                             · {paper.year or 'N/A'} · {paper.citation_count} citations
@@ -606,8 +619,8 @@ if st.session_state.result:
                         <div class="confidence-bar">
                             <div class="confidence-fill" style="width:{rec.confidence}%;"></div>
                         </div>
-                        <p style="color:#8892b0; font-size:0.85rem; margin-top:0.5rem;">
-                            <strong>Why:</strong> {rec.reason}
+                        <p style="color:#334155; font-size:0.9rem; margin-top:0.8rem; line-height:1.5;">
+                            <strong>Why ScholAR recommends this:</strong> {rec.reason}
                         </p>
                     </div>
                     """, unsafe_allow_html=True)
@@ -616,6 +629,11 @@ if st.session_state.result:
                     url = paper.get_download_url()
                     if url:
                         st.link_button(f"📎 Open Paper", url)
+                    
+                    # Abstract preview
+                    if paper.abstract:
+                        with st.expander("📖 Read Abstract"):
+                            st.markdown(paper.abstract)
             else:
                 st.info("No recommendations available.")
 
@@ -674,7 +692,7 @@ elif not st.session_state.running:
             st.markdown(f"""
             <div class="metric-card" style="text-align: left; cursor: pointer;">
                 <div style="font-size: 2rem;">{icon}</div>
-                <strong style="color: #ccd6f6;">{title}</strong>
-                <p style="color: #8892b0; font-size: 0.85rem; margin-top: 0.5rem;">{desc}</p>
+                <strong style="color: #1e293b;">{title}</strong>
+                <p style="color: #64748b; font-size: 0.85rem; margin-top: 0.5rem;">{desc}</p>
             </div>
             """, unsafe_allow_html=True)

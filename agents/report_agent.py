@@ -92,14 +92,14 @@ def create_trend_chart(analysis: AnalysisResult, topic: str) -> str:
     fig.update_layout(
         title=dict(
             text=f"Publication Trends: {topic}",
-            font=dict(size=18, color='white'),
+            font=dict(size=18, color='#1e293b'),
         ),
         xaxis_title="Year",
         yaxis_title="Number of Papers",
-        template="plotly_dark",
-        paper_bgcolor="#1a1a2e",
-        plot_bgcolor="#16213e",
-        font=dict(color="white"),
+        template="plotly_white",
+        paper_bgcolor="#ffffff",
+        plot_bgcolor="#f8f9fc",
+        font=dict(color="#334155"),
         showlegend=False,
     )
 
@@ -146,16 +146,16 @@ def create_cluster_chart(analysis: AnalysisResult) -> str:
     fig.update_layout(
         title=dict(
             text="Research Cluster Distribution",
-            font=dict(size=18, color='white'),
+            font=dict(size=18, color='#1e293b'),
         ),
-        template="plotly_dark",
-        paper_bgcolor="#1a1a2e",
-        font=dict(color="white"),
+        template="plotly_white",
+        paper_bgcolor="#ffffff",
+        font=dict(color="#334155"),
         showlegend=True,
         legend=dict(
-            font=dict(size=12, color="white"),
-            bgcolor="rgba(0,0,0,0.3)",
-            bordercolor="rgba(255,255,255,0.2)",
+            font=dict(size=12, color="#334155"),
+            bgcolor="#ffffff",
+            bordercolor="#e2e8f0",
             borderwidth=1,
             orientation="v",
             yanchor="middle",
@@ -193,23 +193,23 @@ def create_citation_chart(papers: list[Paper], top_n: int = 15) -> str:
         ),
         texttemplate='%{x}',
         textposition='outside',
-        textfont=dict(color='white', size=12),
+        textfont=dict(color='#334155', size=12),
     )])
 
     fig.update_layout(
         title=dict(
             text="Most Cited Papers",
-            font=dict(size=18, color='white'),
+            font=dict(size=18, color='#1e293b'),
         ),
         xaxis_title="Citation Count",
-        template="plotly_dark",
-        paper_bgcolor="#1a1a2e",
-        plot_bgcolor="#16213e",
-        font=dict(color="white", size=11),
+        template="plotly_white",
+        paper_bgcolor="#ffffff",
+        plot_bgcolor="#f8f9fc",
+        font=dict(color="#334155", size=11),
         height=400 + len(sorted_papers) * 30,
         yaxis=dict(
             autorange="reversed",
-            tickfont=dict(color="white", size=11),
+            tickfont=dict(color="#334155", size=11),
         ),
         margin=dict(l=350),
     )

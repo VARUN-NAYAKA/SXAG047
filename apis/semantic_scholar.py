@@ -168,8 +168,19 @@ def _parse_paper(data: dict) -> Optional[Paper]:
 def search_author_papers(author_name: str, limit: int = 50) -> list[Paper]:
     """
     Search for an author by name and return their papers.
-    Uses Semantic Scholar Author Search API.
+    Strategy: Try Author Search API first, then fall back to paper search with author name.
     """
+    papers = _try_author_api(author_name, limit)
+    if papers:
+        return papers
+
+    # Fallback: search papers with author name as query
+    console.print(f"[yellow]Author API failed, falling back to paper search for '{author_name}'[/yellow]")
+    return _author_paper_search_fallback(author_name, limit)
+
+
+def _try_author_api(author_name: str, limit: int) -> list[Paper]:
+    """Try the Semantic Scholar Author Search endpoint."""
     AUTHOR_SEARCH_URL = f"{BASE_URL}/author/search"
 
     _rate_limit()
@@ -177,25 +188,30 @@ def search_author_papers(author_name: str, limit: int = 50) -> list[Paper]:
     try:
         resp = requests.get(
             AUTHOR_SEARCH_URL,
-            params={"query": author_name, "limit": 5},
+            params={"query": author_name, "limit": 10, "fields": "name,paperCount,hIndex"},
             headers=HEADERS,
             timeout=30,
         )
         resp.raise_for_status()
         data = resp.json()
     except requests.RequestException as e:
-        console.print(f"[red]Author search error: {e}[/red]")
+        console.print(f"[red]Author search API error: {e}[/red]")
         return []
 
     authors_found = data.get("data", [])
     if not authors_found:
-        console.print(f"[yellow]No authors found for '{author_name}'[/yellow]")
+        console.print(f"[yellow]No authors found via API for '{author_name}'[/yellow]")
         return []
 
-    # Take the top matching author
-    author_id = authors_found[0].get("authorId")
-    author_display = authors_found[0].get("name", author_name)
-    console.print(f"[green]Found author:[/green] {author_display} (ID: {author_id})")
+    # Find the best matching author (prefer one with most papers)
+    best_author = max(authors_found, key=lambda a: a.get("paperCount", 0))
+    author_id = best_author.get("authorId")
+    author_display = best_author.get("name", author_name)
+    paper_count = best_author.get("paperCount", 0)
+    console.print(f"[green]Found author:[/green] {author_display} (ID: {author_id}, {paper_count} papers)")
+
+    if not author_id:
+        return []
 
     # Fetch their papers
     AUTHOR_PAPERS_URL = f"{BASE_URL}/author/{author_id}/papers"
@@ -217,7 +233,7 @@ def search_author_papers(author_name: str, limit: int = 50) -> list[Paper]:
         resp.raise_for_status()
         data = resp.json()
     except requests.RequestException as e:
-        console.print(f"[red]Author papers error: {e}[/red]")
+        console.print(f"[red]Author papers fetch error: {e}[/red]")
         return []
 
     papers = []
@@ -226,6 +242,13 @@ def search_author_papers(author_name: str, limit: int = 50) -> list[Paper]:
         if paper:
             papers.append(paper)
 
-    console.print(f"[green]Author '{author_display}':[/green] Found {len(papers)} papers")
+    console.print(f"[green]Author '{author_display}':[/green] Fetched {len(papers)} papers")
     return papers[:limit]
+
+
+def _author_paper_search_fallback(author_name: str, limit: int) -> list[Paper]:
+    """Fallback: search for papers containing the author's name."""
+    query = f"author:{author_name}"
+    console.print(f"[yellow]Fallback search:[/yellow] '{query}'")
+    return search_papers(query, limit=limit)
 

@@ -5,11 +5,14 @@ enableCORS = false
 enableXsrfProtection = false
 
 [theme]
-primaryColor = "#e94560"
-backgroundColor = "#0f0c29"
-secondaryBackgroundColor = "#1a1a2e"
-textColor = "#ccd6f6"
+primaryColor = "#6C63FF"
+backgroundColor = "#f8f9fc"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#1e293b"
 font = "sans serif"
 
 [browser]
 gatherUsageStats = false
+
+[server]
+maxUploadSize = 15
