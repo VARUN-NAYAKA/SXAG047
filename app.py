@@ -317,21 +317,6 @@ if should_run:
     else:
         os.environ["GEMINI_API_KEY"] = ACTIVE_API_KEY
 
-        # Quick validation of the API key
-        try:
-            import google.generativeai as genai
-            genai.configure(api_key=ACTIVE_API_KEY)
-            test_model = genai.GenerativeModel("gemini-2.0-flash")
-            test_model.generate_content("Hello", generation_config=genai.GenerationConfig(max_output_tokens=5))
-        except Exception as key_err:
-            err_msg = str(key_err)
-            if "API_KEY_INVALID" in err_msg or "API key not valid" in err_msg:
-                st.error("❌ **Invalid API Key!** Please get a new key from [Google AI Studio](https://aistudio.google.com/apikey) and enter it in the sidebar.")
-            else:
-                st.error(f"❌ API Key error: {err_msg}")
-            st.session_state.running = False
-            st.stop()
-
         st.session_state.running = True
         st.session_state.logs = []
         st.session_state.result = None
