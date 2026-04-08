@@ -194,13 +194,11 @@ if "logs" not in st.session_state:
 with st.sidebar:
     st.markdown("## ⚙️ Configuration")
 
-    # API key — pre-loaded from .env, editable
-    api_key = st.text_input(
-        "Gemini API Key",
-        value=GEMINI_API_KEY,
-        type="password",
-        help="Loaded from .env file. You can override it here.",
-    )
+    # API key status indicator (no input needed)
+    if GEMINI_API_KEY:
+        st.success("✅ API Key loaded", icon="🔑")
+    else:
+        st.error("❌ No API Key found. Add it to .env or Streamlit Cloud Secrets.")
 
     st.markdown("---")
     st.markdown("### 🔧 Advanced Settings")
@@ -270,11 +268,10 @@ with col2:
 # Run Agent
 # ──────────────────────────────────────────────
 if run_button and topic:
-    active_key = api_key or GEMINI_API_KEY
-    if not active_key:
-        st.error("⚠️ Please provide your Gemini API Key in the sidebar or .env file.")
+    if not GEMINI_API_KEY:
+        st.error("⚠️ No Gemini API Key found. Add it to your .env file or Streamlit Cloud Secrets.")
     else:
-        os.environ["GEMINI_API_KEY"] = active_key
+        os.environ["GEMINI_API_KEY"] = GEMINI_API_KEY
 
         st.session_state.running = True
         st.session_state.logs = []
