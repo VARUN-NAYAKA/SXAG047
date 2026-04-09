@@ -4,8 +4,7 @@ Extracts text and research metadata from uploaded PDF papers.
 """
 
 import os
-import google.generativeai as genai
-from core.config import GEMINI_MODEL, LLM_TEMPERATURE
+from core.llm_utils import call_gemini
 from rich.console import Console
 
 console = Console()
@@ -36,13 +35,6 @@ def extract_seed_topic(pdf_text: str) -> dict:
     Returns:
         dict with keys: title, topic, keywords, abstract_summary
     """
-    api_key = os.environ.get("GEMINI_API_KEY", "")
-    if not api_key:
-        return _fallback_extraction(pdf_text)
-
-    genai.configure(api_key=api_key)
-    llm = genai.GenerativeModel(GEMINI_MODEL)
-
     # Use first 3000 chars to stay within limits and be fast
     snippet = pdf_text[:3000]
 
@@ -60,14 +52,7 @@ Paper text:
 ---"""
 
     try:
-        response = llm.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                temperature=0.2,
-                max_output_tokens=500,
-            ),
-        )
-        text = response.text.strip()
+        text = call_gemini(prompt, max_tokens=500, temperature=0.2)
 
         result = {
             "title": "",

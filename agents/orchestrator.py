@@ -9,7 +9,7 @@ from typing import TypedDict, Annotated, Literal
 import operator
 
 from langgraph.graph import StateGraph, END
-import google.generativeai as genai
+from core.llm_utils import call_gemini
 
 from core.config import (
     GEMINI_MODEL, LLM_TEMPERATURE,
@@ -30,15 +30,7 @@ from rich.console import Console
 
 console = Console()
 
-# Lazy LLM init
-_orch_llm = None
-def _get_llm():
-    global _orch_llm
-    if _orch_llm is None:
-        api_key = os.environ.get("GEMINI_API_KEY", "")
-        genai.configure(api_key=api_key)
-        _orch_llm = genai.GenerativeModel(GEMINI_MODEL)
-    return _orch_llm
+# LLM calls go through core.llm_utils.call_gemini (retry + fallback)
 
 
 # ──────────────────────────────────────────────
@@ -281,14 +273,7 @@ def _get_refinement_queries(
     )
 
     try:
-        response = _get_llm().generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                temperature=LLM_TEMPERATURE,
-                max_output_tokens=1024,
-            ),
-        )
-        text = response.text.strip()
+        text = call_gemini(prompt, max_tokens=1024, temperature=LLM_TEMPERATURE)
         if text.startswith("```"):
             text = text.split("```")[1]
             if text.startswith("json"):

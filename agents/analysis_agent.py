@@ -9,7 +9,7 @@ import uuid
 from typing import Optional
 from collections import Counter, defaultdict
 
-import google.generativeai as genai
+from core.llm_utils import call_gemini
 
 from core.config import (
     GEMINI_MODEL, LLM_TEMPERATURE,
@@ -31,36 +31,11 @@ from rich.console import Console
 
 console = Console()
 
-# ──────────────────────────────────────────────
-# LAZY LLM INITIALIZATION
-# ──────────────────────────────────────────────
-_llm = None
-
-def _get_llm():
-    global _llm
-    api_key = os.environ.get("GEMINI_API_KEY", "")
-    if _llm is None and api_key:
-        genai.configure(api_key=api_key)
-        _llm = genai.GenerativeModel(GEMINI_MODEL)
-        console.print(f"[green]Analysis LLM initialized ({GEMINI_MODEL})[/green]")
-    elif _llm is None:
-        console.print("[red]WARNING: GEMINI_API_KEY not set![/red]")
-        genai.configure(api_key=api_key)
-        _llm = genai.GenerativeModel(GEMINI_MODEL)
-    return _llm
-
+# LLM calls go through core.llm_utils.call_gemini (retry + fallback)
 
 def _call_llm(prompt: str) -> str:
-    llm = _get_llm()
     try:
-        response = llm.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                temperature=LLM_TEMPERATURE,
-                max_output_tokens=4096,
-            ),
-        )
-        return response.text.strip()
+        return call_gemini(prompt, max_tokens=4096)
     except Exception as e:
         console.print(f"[red]LLM call failed: {e}[/red]")
         return ""

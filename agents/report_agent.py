@@ -8,7 +8,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-import google.generativeai as genai
+from core.llm_utils import call_gemini
 import plotly.graph_objects as go
 import plotly.express as px
 
@@ -24,31 +24,11 @@ from rich.console import Console
 
 console = Console()
 
-# ──────────────────────────────────────────────
-# LAZY LLM INITIALIZATION
-# ──────────────────────────────────────────────
-_llm = None
-
-def _get_llm():
-    global _llm
-    if _llm is None:
-        api_key = os.environ.get("GEMINI_API_KEY", "")
-        genai.configure(api_key=api_key)
-        _llm = genai.GenerativeModel(GEMINI_MODEL)
-    return _llm
-
+# LLM calls go through core.llm_utils.call_gemini (retry + fallback)
 
 def _call_llm(prompt: str, max_tokens: int = 4096) -> str:
-    llm = _get_llm()
     try:
-        response = llm.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                temperature=LLM_TEMPERATURE,
-                max_output_tokens=max_tokens,
-            ),
-        )
-        return response.text.strip()
+        return call_gemini(prompt, max_tokens=max_tokens)
     except Exception as e:
         console.print(f"[red]LLM error: {e}[/red]")
         return ""

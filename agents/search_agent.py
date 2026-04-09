@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 from sentence_transformers import SentenceTransformer
 
-import google.generativeai as genai
+from core.llm_utils import call_gemini
 
 from core.config import (
     GEMINI_MODEL, LLM_TEMPERATURE,
@@ -25,20 +25,7 @@ from rich.console import Console
 
 console = Console()
 
-# ──────────────────────────────────────────────
-# LAZY LLM INITIALIZATION
-# ──────────────────────────────────────────────
-_llm = None
-
-def _get_llm():
-    """Lazy-load Gemini using the CURRENT env var."""
-    global _llm
-    if _llm is None:
-        api_key = os.environ.get("GEMINI_API_KEY", "")
-        genai.configure(api_key=api_key)
-        _llm = genai.GenerativeModel(GEMINI_MODEL)
-        console.print(f"[green]Search LLM initialized ({GEMINI_MODEL})[/green]")
-    return _llm
+# LLM calls go through core.llm_utils.call_gemini (retry + fallback)
 
 # Lazy-loaded embedding model
 _embedding_model: Optional[SentenceTransformer] = None
@@ -73,15 +60,7 @@ def expand_queries(topic: str, num_queries: int = 12) -> list[SearchQuery]:
     prompt = QUERY_EXPANSION_PROMPT.format(topic=topic, num_queries=num_queries)
 
     try:
-        response = _get_llm().generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                temperature=LLM_TEMPERATURE,
-                max_output_tokens=2048,
-            ),
-        )
-
-        text = response.text.strip()
+        text = call_gemini(prompt, max_tokens=2048, temperature=LLM_TEMPERATURE)
         # Clean up potential markdown wrapping
         if text.startswith("```"):
             text = text.split("```")[1]
