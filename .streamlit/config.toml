@@ -3,6 +3,7 @@ headless = true
 port = 8501
 enableCORS = false
 enableXsrfProtection = false
+maxUploadSize = 15
 
 [theme]
 primaryColor = "#6C63FF"
@@ -13,6 +14,3 @@ font = "sans serif"
 
 [browser]
 gatherUsageStats = false
-
-[server]
-maxUploadSize = 15

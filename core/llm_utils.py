@@ -1,7 +1,7 @@
 """
 ScholAR - Shared LLM utility.
-Uses google-genai SDK with gemini-2.5-flash.
-Includes rate limiting to avoid burning through free tier quota.
+Uses google.genai SDK (new) with gemini-2.0-flash.
+Includes rate limiting to avoid quota exhaustion.
 """
 
 import os
@@ -13,12 +13,12 @@ from rich.console import Console
 
 console = Console()
 
-MODEL = "gemini-2.5-flash"
+MODEL = "gemini-flash-latest"
 
-# ── Rate limiter: max 10 requests per minute (free tier = 10 RPM) ──
+# ── Rate limiter: max 8 requests per minute (free tier safety margin) ──
 _lock = threading.Lock()
 _call_times: list[float] = []
-_MAX_RPM = 8  # stay under the 10 RPM limit
+_MAX_RPM = 8
 
 
 def _rate_limit():
@@ -34,13 +34,16 @@ def _rate_limit():
         _call_times.append(time.time())
 
 
-def call_gemini(prompt: str, max_tokens: int = 4096, temperature: float = 0.3, max_retries: int = 3) -> str:
+def call_gemini(prompt: str, max_tokens: int = 4096, temperature: float = 0.3, max_retries: int = 5) -> str:
     """
-    Call Gemini 2.5 Flash with built-in rate limiting and retry.
+    Call Gemini 2.0 Flash with built-in rate limiting and retry.
+    Reads API key from environment variable or uses default.
     """
-    api_key = os.environ.get("GEMINI_API_KEY", "")
+    # Try environment first, then fall back to default
+    api_key = os.environ.get("GEMINI_API_KEY") or "AIzaSyAl6eyojROioBI3A8Jxok_sXFC_896-Gxo"
+
     if not api_key:
-        raise ValueError("No GEMINI_API_KEY set in environment")
+        raise ValueError("No GEMINI_API_KEY set in environment or config")
 
     client = genai.Client(api_key=api_key)
 
@@ -59,11 +62,30 @@ def call_gemini(prompt: str, max_tokens: int = 4096, temperature: float = 0.3, m
 
         except Exception as e:
             err_msg = str(e)
-            is_quota = "429" in err_msg or "quota" in err_msg.lower() or "RESOURCE_EXHAUSTED" in err_msg
 
-            if is_quota and attempt < max_retries - 1:
+            # Check for quota exhaustion
+            if "429" in err_msg and "limit: 0" in err_msg:
+                raise RuntimeError(
+                    "🔴 FREE TIER QUOTA EXHAUSTED\n\n"
+                    "The default API key has hit its daily free tier limit (0 remaining).\n\n"
+                    "SOLUTION: Paste your own Gemini API key in the Streamlit sidebar:\n"
+                    "1. Get a paid Gemini API key from https://ai.google.dev/\n"
+                    "2. Enter it in the 'Custom Gemini API Key' field in the left sidebar\n"
+                    "3. Retry the search\n\n"
+                    "The free tier quota resets daily at UTC midnight."
+                ) from e
+
+            is_retryable = (
+                "429" in err_msg or
+                "quota" in err_msg.lower() or
+                "RESOURCE_EXHAUSTED" in err_msg or
+                "503" in err_msg or
+                "UNAVAILABLE" in err_msg
+            )
+
+            if is_retryable and attempt < max_retries - 1:
                 wait_time = 30 * (attempt + 1)
-                console.print(f"[yellow]Rate limited (attempt {attempt+1}), waiting {wait_time}s...[/yellow]")
+                console.print(f"[yellow]Service temporarily unavailable (attempt {attempt+1}), waiting {wait_time}s...[/yellow]")
                 time.sleep(wait_time)
             else:
                 raise
