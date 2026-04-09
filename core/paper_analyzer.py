@@ -1,14 +1,15 @@
 """
 ScholAR - PDF Deep Analysis Module.
 Performs comprehensive analysis of an uploaded paper using Gemini LLM.
+With automatic retry and model fallback for quota issues.
 """
 
 import os
-import google.generativeai as genai
-from core.config import GEMINI_MODEL
+from core.llm_utils import call_gemini
 from rich.console import Console
 
 console = Console()
+
 
 
 def analyze_paper_deeply(pdf_text: str) -> dict:
@@ -16,13 +17,6 @@ def analyze_paper_deeply(pdf_text: str) -> dict:
     Perform a comprehensive analysis of an uploaded research paper.
     Returns a structured dict with summary, pros/cons, key points, trends, etc.
     """
-    api_key = os.environ.get("GEMINI_API_KEY", "")
-    if not api_key:
-        return _empty_analysis("No API key available")
-
-    genai.configure(api_key=api_key)
-    llm = genai.GenerativeModel(GEMINI_MODEL)
-
     # Use up to 8000 chars for thorough analysis
     snippet = pdf_text[:8000]
 
@@ -68,14 +62,7 @@ Paper text:
 ---"""
 
     try:
-        response = llm.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                temperature=0.3,
-                max_output_tokens=4096,
-            ),
-        )
-        text = response.text.strip()
+        text = call_gemini(prompt, max_tokens=4096)
         return _parse_analysis(text)
     except Exception as e:
         console.print(f"[red]Paper analysis error: {e}[/red]")
@@ -87,12 +74,8 @@ def generate_comparison_report(pdf_text: str, similar_papers: list) -> str:
     Compare the uploaded paper with similar papers found by ScholAR.
     Returns a markdown comparison report.
     """
-    api_key = os.environ.get("GEMINI_API_KEY", "")
-    if not api_key or not similar_papers:
+    if not similar_papers:
         return ""
-
-    genai.configure(api_key=api_key)
-    llm = genai.GenerativeModel(GEMINI_MODEL)
 
     snippet = pdf_text[:3000]
 
@@ -134,14 +117,7 @@ Provide a DETAILED comparison report in markdown format covering:
 Be SPECIFIC — reference actual paper titles and findings. Do NOT be generic."""
 
     try:
-        response = llm.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                temperature=0.3,
-                max_output_tokens=3000,
-            ),
-        )
-        return response.text.strip()
+        return call_gemini(prompt, max_tokens=3000)
     except Exception as e:
         console.print(f"[red]Comparison report error: {e}[/red]")
         return ""
