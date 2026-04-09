@@ -64,7 +64,7 @@ MAX_GRAPH_NODES = 500
 # ──────────────────────────────────────────────
 # LLM Settings
 # ──────────────────────────────────────────────
-GEMINI_MODEL = "gemini-2.5-flash-preview-05-20"
+GEMINI_MODEL = "gemini-2.5-flash"
 LLM_TEMPERATURE = 0.3
 LLM_MAX_TOKENS = 8192
 
